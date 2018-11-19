@@ -5,8 +5,9 @@
  *      Author: besh81
  */
 
-#include "config.h"
 #include <iostream>
+
+#include "config.h"
 #include "assetspanel.h"
 #include "guimanager.h"
 #include "imagemanager.h"

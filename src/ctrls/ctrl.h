@@ -8,11 +8,13 @@
 #ifndef NANA_CREATOR_CTRL_H
 #define NANA_CREATOR_CTRL_H
 
-#include "config.h"
 #include <memory>
+
 #include <nana/gui/wvl.hpp>
-#include "ctrls/property.h"
-#include "codegenerator_data.h"
+
+#include <config.h>
+#include "property.h"
+#include <codegenerator_data.h>
 
 
 namespace ctrls

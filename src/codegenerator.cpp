@@ -8,6 +8,7 @@
 #include <iostream>
 #include <fstream>
 #include <streambuf>
+
 #include "codegenerator.h"
 #include "guimanager.h"
 #include "filemanager.h"

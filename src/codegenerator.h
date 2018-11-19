@@ -7,10 +7,10 @@
 
 #ifndef NANA_CREATOR_CODEGEN_H
 #define NANA_CREATOR_CODEGEN_H
-
-#include "config.h"
 #include <vector>
 #include <string>
+
+#include "config.h"
 #include "tree.h"
 #include "codegenerator_data.h"
 #include "ctrls/ctrl.h"

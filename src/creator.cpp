@@ -2,10 +2,12 @@
  *      Nana C++ Library - Creator
  *      Author: besh81
  */
-#include "creator.h"
-#include "config.h"
-#include <nana/gui/filebox.hpp>
 #include <iostream>
+
+#include <nana/gui/filebox.hpp>
+
+#include "config.h"
+#include "creator.h"
 #include "guimanager.h"
 #include "filemanager.h"
 #include "inifile.h"

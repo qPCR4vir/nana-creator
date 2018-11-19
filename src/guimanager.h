@@ -8,9 +8,12 @@
 #ifndef NANA_CREATOR_GUIMANAGER_H
 #define NANA_CREATOR_GUIMANAGER_H
 
-#include "config.h"
 #include <nana/gui/widgets/toolbar.hpp>
-#include "pugixml/pugixml.hpp"
+
+#include <pugixml/pugixml.hpp>
+
+#include "config.h"
+
 #include "tree.h"
 #include "ctrls/ctrl.h"
 #include "namemanager.h"
