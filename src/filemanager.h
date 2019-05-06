@@ -65,15 +65,15 @@ std::string get_relative_path(const std::string& basedir, const std::string& abs
 
 
 //---------------------------------------------
-// extract the dir path from the given filename
-//---------------------------------------------
-std::string get_dir_path(const std::string& filename);
-
-
-//---------------------------------------------
 // get current working directory
 //---------------------------------------------
 std::string get_working_dir();
+
+
+//---------------------------------------------
+// set working directory
+//---------------------------------------------
+bool set_working_dir(const std::string& path);
 
 
 //---------------------------------------------

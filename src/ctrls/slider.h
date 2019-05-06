@@ -20,7 +20,7 @@ namespace ctrls
 		: public ctrl
 	{
 	public:
-		slider(nana::window wd, const std::string& name);
+		slider(ctrl* parent, const std::string& name);
 
 		void update() override;
 
@@ -29,6 +29,9 @@ namespace ctrls
 
 	protected:
 		nana::slider sld;
+
+		unsigned int _def_maximum;
+		unsigned int _def_value;
 	};
 
 }//end namespace ctrls

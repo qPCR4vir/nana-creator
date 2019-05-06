@@ -1,23 +1,22 @@
 /*
  *		nana::propertygrid Implementation
  *
- *      Nana C++ Library - Creator
+ *      part of Nana Creator (https://github.com/besh81/nana-creator)
  *      Author: besh81
  */
 
 #include <iostream>
-#include "propgrid.h"
+#include "propertygrid.h"
 #include <nana/gui/widgets/scroll.hpp>
-#include <nana/gui/widgets/panel.hpp>
 #include <nana/gui/layout_utility.hpp>
 #include <nana/gui/element.hpp>
-#include <list>
-#include <stdexcept>
-#include <algorithm>
-#include <cassert>
+#include <nana/gui/drawing.hpp>
 
 
-//#define		ENABLE_H_SCROLL
+#define			IBOX_SIZE		13
+#define			IBOX_RECT_SIZE	7
+#define			IBOX_MARGIN		2
+#define			IBOX_WIDTH		(IBOX_MARGIN + IBOX_SIZE + IBOX_MARGIN)
 
 
 namespace nana
@@ -44,31 +43,38 @@ namespace nana
 
 				std::size_t count() const
 				{
-					return 2;
+					return 3;
 				}
 
 				unsigned col_width_adj(unsigned col, unsigned width) const
 				{
+					if(col == 2) // ibox
+						return min_width_[2]; // ibox has fixed width
+
 					unsigned adj = 0;
 					if(width > width_())
 						adj = (width - width_()) / 2;
 
-					// labels
-					if(col == 0)
+					if(col == 0) // labels
 						return min_width_[0] + adj;
-					// values
-					if(width > width_())
-						return width - (min_width_[0] + adj);
-					return min_width_[1];
+
+					if(col == 1) // values
+					{
+						if(width > width_())
+							return width - (min_width_[0] + adj) - min_width_[2];
+						return min_width_[1];
+					}
+
+					return 0;
 				}
 
 			private:
 				unsigned width_() const
 				{
-					return min_width_[0] + min_width_[1];
+					return min_width_[0] + min_width_[1] + min_width_[2];
 				}
 
-				unsigned min_width_[2]{ 100, 100 };
+				unsigned min_width_[3]{ 100, 100, IBOX_WIDTH };
 			};
 
 
@@ -139,13 +145,13 @@ namespace nana
 
 				void scroll(const index_pair& pos, bool as_first, bool expand_category = true);
 
-				///Append a new category with a specified name and return a pointer to it.
+				/// Append a new category with a specified name and return a pointer to it.
 				category_t* create_cat(std::string&& text)
 				{
 					categories_.emplace_back(std::move(text));
 					return &categories_.back();
 				}
-				/// add a new cat created at "pos" and return a ref to it
+				/// Add a new cat created at "pos" and return a ref to it
 				category_t* create_cat(std::size_t pos, std::string&& text)
 				{
 					return &(*categories_.emplace(this->get(pos), std::move(text)));
@@ -228,7 +234,6 @@ namespace nana
 
 				bool expand(std::size_t cat) const
 				{
-					auto ex = get(cat)->expand;
 					return (good(cat) ? get(cat)->expand : false);
 				}
 
@@ -293,8 +298,6 @@ namespace nana
 				}
 
 			private:
-				void bind_();
-
 				essence_t * ess_{ nullptr };
 				nana::propertygrid * widget_{ nullptr };
 
@@ -317,7 +320,7 @@ namespace nana
 				es_lister	lister;
 
 				index_pair	pointer_where;	//indicates the item where the mouse is placed
-				
+
 
 				struct scroll_part
 				{
@@ -325,9 +328,6 @@ namespace nana
 					::nana::point pos;
 
 					::nana::scroll<true> v;
-					#ifdef ENABLE_H_SCROLL
-					::nana::scroll<false> h;
-					#endif
 				} scroll;
 
 
@@ -356,21 +356,6 @@ namespace nana
 				{
 					return scroll.pos.y;
 				}
-				#ifdef ENABLE_H_SCROLL
-				void h_offset(int val, bool is_delta = false)
-				{
-					if(is_delta)
-						scroll.pos.x += val;
-					else
-						scroll.pos.x = val;
-
-					scroll.pos.x = std::max(std::min(0, scroll.pos.x), static_cast<int>(scroll.h.range()) - static_cast<int>(scroll.h.amount()));
-				}
-				int h_offset() const
-				{
-					return scroll.pos.x;
-				}
-				#endif
 
 
 				void update()
@@ -411,37 +396,10 @@ namespace nana
 					//The area to show the widget
 					auto graph_r = available_area();
 
-					#ifdef ENABLE_H_SCROLL
-					if(scroll.h.empty() == false)
-					{
-						const auto ext_px = scroll.v.empty() ? 0 : scroll.scale;
-						if(ext_px >= graph_r.width)
-							return;
-
-						const unsigned width = graph_r.width - (scroll.v.empty() ? 0 : scroll.scale);
-
-						scroll.h.amount(wd_sz.width);
-						scroll.h.range(width);
-						
-						if(h_offset() < static_cast<int>(width) - static_cast<int>(wd_sz.width))
-							h_offset(static_cast<int>(width) - static_cast<int>(wd_sz.width));
-
-						scroll.h.value(-h_offset());
-						scroll.h.step(graph->text_extent_size(L"W").width); //todo ?
-					}
-					else
-						h_offset(0);
-					#endif
-
 					if(scroll.v.empty() == false)
 					{
-						#ifdef ENABLE_H_SCROLL
-						const auto ext_px = scroll.h.empty() ? 0 : scroll.scale;
-						const unsigned height = graph_r.height - (scroll.h.empty() ? 0 : scroll.scale);
-						#else
 						const auto ext_px = 0;
 						const unsigned height = graph_r.height;
-						#endif
 
 						if(ext_px >= graph_r.height)
 							return;
@@ -472,54 +430,13 @@ namespace nana
 					//The area to show the widget
 					auto graph_r = available_area();
 
-					bool h = false, v = false;
+					bool v = false;
 
 					if(graph_r.height < wd_sz.height)
 					{
 						v = true;
 						graph_r.width -= scroll.scale;
-						#ifdef ENABLE_H_SCROLL
-						if(graph_r.width < wd_sz.width)
-						{
-							h = true;
-							graph_r.height -= scroll.scale;
-						}
-						#endif
 					}
-					#ifdef ENABLE_H_SCROLL
-					else if(graph_r.width < wd_sz.width)
-					{
-						h = true;
-						graph_r.height -= scroll.scale;
-						if(graph_r.height < wd_sz.height)
-						{
-							v = true;
-							graph_r.width -= scroll.scale;
-						}
-					}
-					#endif
-
-					#ifdef ENABLE_H_SCROLL
-					if(h)
-					{
-						::nana::rectangle r(graph_r.x, graph_r.y + graph_r.height, graph_r.width, scroll.scale);
-						if(scroll.h.empty())
-						{
-							scroll.h.create(wd, r);
-							::nana::API::take_active(scroll.h.handle(), false, wd);
-
-							scroll.h.events().value_changed.connect_unignorable([this](const ::nana::arg_scroll& arg)
-							{
-								h_offset(-static_cast<int>(scroll.h.value()));
-								::nana::API::refresh_window(lister.wd_ptr()->handle());
-							});
-						}
-						else
-							scroll.h.move(r);
-					}
-					else if(!scroll.h.empty())
-						scroll.h.close();
-					#endif
 
 					if(v)
 					{
@@ -585,7 +502,7 @@ namespace nana
 								if(!i_categ->expand)
 									continue;
 							}
-							
+
 
 							// items
 							auto size = i_categ->items.size();
@@ -618,17 +535,11 @@ namespace nana
 					r = available_area();
 
 					unsigned width = (scroll.v.empty() ? 0 : scroll.scale);
-					#ifdef ENABLE_H_SCROLL
-					unsigned height = (scroll.h.empty() ? 0 : scroll.scale);
-					#else
-					unsigned height = 0;
-					#endif
 
-					if(r.width <= width || r.height <= height)
+					if(r.width <= width)
 						return false;
 
 					r.width -= width;
-					r.height -= height;
 					return true;
 				}
 
@@ -640,97 +551,133 @@ namespace nana
 					v_offset(upwards ? static_cast<int>(scroll.v.step()) : -static_cast<int>(scroll.v.step()), true);
 					return true;
 				}
-
-				unsigned auto_width(unsigned col, unsigned max = 3000) /// \todo introduce parametr max_header_width
-				{
-					unsigned max_w{ 0 };
-					for(const auto &cat : lister.cat_container())
-						for(const auto &it : cat.items)
-						{
-							// precalcule text geometry
-							unsigned ts;
-							if(col == 0)
-								ts = graph->text_extent_size(it->label()).width;
-							else
-								ts = graph->text_extent_size(it->value()).width;
-							if(max_w < ts)
-								max_w = ts;
-						}
-					if(!max_w) return 0;
-
-					unsigned ext_w = scheme_ptr->ext_w;
-					columns.set_min_width(col, max_w + ext_w + 1 < max ? max_w + ext_w + 1 : max);
-					return max_w;
-				}
 			};
 
 
 			/// class pgitem
-			void pgitem::label(const std::string& label)
+			void pgitem::init(window wd)
 			{
-				label_ = label;
-			}
-			std::string pgitem::label() const
-			{
-				return label_;
-			}
-			void pgitem::value(const std::string& value)
-			{
-				value_ = value;
-			}
-			std::string pgitem::value() const
-			{
-				return value_;
-			}
-
-			unsigned pgitem::size() const
-			{
-				return size_;
-			}
-
-			void pgitem::draw(paint::graphics* graph, rectangle label_r, rectangle value_r, const int txtoff, color bgcolor, color fgcolor) const
-			{
-				// draw the label
-				// background
-				graph->rectangle(label_r, true, bgcolor);
-				// text
-				if(label_r.width > 5)
+				// ibox context menu
+				// 0. Reset
+				menu_.append("Reset", [this](const nana::menu::item_proxy& ip)
 				{
-					int content_pos = 20;
-					nana::size ts = graph->text_extent_size(label_);        // precalcule text geometry
+					reset();
+					emit_event();
+				});
 
-					graph->string(point{ label_r.x + content_pos, label_r.y + txtoff }, label_, fgcolor); // draw full text of the cell index (column)
 
-					if(static_cast<int>(ts.width) > static_cast<int>(label_r.width) - (content_pos + label_r.x))	// it was an excess
+				// ibox
+				ibox_.create(wd);
+
+				ibox_.events().mouse_down.connect_front([this](const nana::arg_mouse& arg)
+				{
+					if(!en_) // only if enabled
+						return;
+
+					if(arg.left_button)
 					{
+						// Reset
+						menu_.enabled(0, !isdefault());
+
+						menu_.popup(ibox_, arg.pos.x, arg.pos.y);
+						arg.stop_propagation();
+					}
+				});
+				ibox_.events().mouse_enter.connect_front([this]()
+				{
+					if(en_) // only if enabled
+						ibox_.bgcolor(nana::color(201, 222, 245));
+				});
+				ibox_.events().mouse_leave.connect_front([this]()
+				{
+					ibox_.bgcolor(ess_->lister.wd_ptr()->bgcolor());
+				});
+
+				nana::drawing dw{ ibox_ };
+				dw.draw([this](nana::paint::graphics& graph)
+				{
+					int b = (IBOX_SIZE - IBOX_RECT_SIZE) / 2;
+					if(isdefault())
+						graph.rectangle(rectangle{b, b, IBOX_RECT_SIZE, IBOX_RECT_SIZE}, true, ess_->lister.wd_ptr()->bgcolor()); //default
+					else
+						graph.rectangle(rectangle{ b, b, IBOX_RECT_SIZE, IBOX_RECT_SIZE }, true, nana::colors::dark_blue); //modified
+					graph.rectangle(rectangle{b, b, IBOX_RECT_SIZE, IBOX_RECT_SIZE}, false, colors::dark_grey);
+				});
+
+				create(wd);
+			}
+
+			void pgitem::draw(paint::graphics* graph, rectangle area, unsigned labelw, unsigned valuew, unsigned iboxw, const int txtoff, color bgcolor, color fgcolor) const
+			{
+				// background
+				graph->rectangle(area, true, bgcolor);
+
+				// draw label
+				if(labelw)
+				{
+					area.width = labelw;
+					draw_label(graph, area, txtoff, bgcolor, fgcolor);
+				}
+
+				// draw value
+				if(valuew)
+				{
+					area.x += labelw;
+					area.width = valuew;
+					draw_value(graph, area, txtoff, bgcolor, fgcolor);
+				}
+
+				// draw interaction-box
+				if(iboxw)
+				{
+					API::show_window(ibox_, true);
+					area.x += valuew;
+					area.width = iboxw;
+					draw_ibox(graph, area, bgcolor, fgcolor);
+				}
+				else
+					API::show_window(ibox_, false);
+			}
+
+			void pgitem::draw_label(paint::graphics* graph, rectangle rect, const int txtoff, color bgcolor, color fgcolor) const
+			{
+				if(rect.width > 5)
+				{
+					if(!en_)
+						fgcolor = colors::gray; //TODO: scheme
+
+					int content_pos = 20; //TODO: scheme
+					nana::size ts = graph->text_extent_size(label_);
+
+					graph->string(point{ rect.x + content_pos, rect.y + txtoff }, label_, fgcolor);
+
+					if(static_cast<int>(ts.width) > static_cast<int>(rect.width) - (content_pos + rect.x))
+					{
+						//The text is painted over the next col
+
 						auto suspension_width = graph->text_extent_size(L"...").width;
+						int xpos = rect.x + static_cast<int>(rect.width) - static_cast<int>(suspension_width);
+						unsigned w = rect.width - suspension_width;
 
-						//The text is painted over the next subitem                // here beging the ...
-						int xpos = label_r.x + static_cast<int>(label_r.width) - static_cast<int>(suspension_width);
-
-						// litter rect with the item bg end ...
-						graph->rectangle(rectangle{ xpos, label_r.y + 2, suspension_width, label_r.height - 4 }, true, bgcolor);
-						graph->string(point{ xpos, label_r.y + 2 }, L"...");
+						// litter rect with the item bg and ...
+						graph->rectangle(rectangle{ xpos, rect.y + 2, w, rect.height - 4 }, true, bgcolor);
+						graph->string(point{ xpos, rect.y + 2 }, L"...");
 					}
 				}
+			}
 
-				// draw the value
-				if(value_r.empty())
-					return;
+			void pgitem::draw_value(paint::graphics* graph, rectangle rect, const int txtoff, color bgcolor, color fgcolor) const
+			{
+				if(rect.width > 5)
+					graph->string(point{ rect.x + 5, rect.y + 2 }, value_, fgcolor);
+			}
 
-				// background
-				graph->rectangle(value_r, true, bgcolor);
-
-				//if(false == draw_value(graph, rectangle{ value_r.x+1, value_r.y+2, value_r.width-2, value_r.height-4 }, bgcolor, fgcolor))
-				if(false == draw_value(graph, value_r, bgcolor, fgcolor))
-					return;
-
-				// draw the value as label
-				if(value_r.width > 5)
-				{
-					int content_pos = 5;
-					graph->string(point{ value_r.x + content_pos, value_r.y + txtoff }, value_, fgcolor); // draw full text of the cell index (column)
-				}
+			void pgitem::draw_ibox(paint::graphics* graph, rectangle rect, color bgcolor, color fgcolor) const
+			{
+				ibox_.bgcolor(bgcolor);
+				ibox_.move(rect.x + (rect.width - IBOX_SIZE) / 2, (rect.height - IBOX_SIZE) / 2);
+				ibox_.size(nana::size(IBOX_SIZE, IBOX_SIZE));
+				API::refresh_window(ibox_);
 			}
 
 			void pgitem::update()
@@ -810,8 +757,6 @@ namespace nana
 				nana::rectangle rect;
 				ess_->rect_lister(rect);
 
-				auto xx = ess_->v_offset();
-
 				if(pos_offset < -ess_->v_offset() || as_first)
 					ess_->v_offset(-pos_offset);
 				if(pos_offset_end + ess_->v_offset() > static_cast<int>(rect.height))
@@ -862,6 +807,11 @@ namespace nana
 
 					auto labels_width = essence_->columns.col_width_adj(0, rect.width);
 					auto values_width = essence_->columns.col_width_adj(1, rect.width);
+					auto ibox_width = essence_->columns.col_width_adj(2, rect.width);
+
+					// adjust right margin
+					if(ibox_width == 0)
+						values_width--;
 
 					es_lister & lister = essence_->lister;
 
@@ -887,7 +837,6 @@ namespace nana
 							{
 								// draw category
 								bool highlighted = tracker.is_category() && (cat == tracker.cat) ? true : false;
-								//_m_draw_categ(*i_categ, rectangle{ rect.x, rect.y + y, rect.width, essence_->cat_size }, txtoff, bgcolor, highlighted);
 								_m_draw_categ(*i_categ, rectangle{ rect.x, rect.y + y, rect.width, essence_->cat_size }, txtoff, nana::color(240, 240, 245), highlighted);
 							}
 
@@ -916,33 +865,24 @@ namespace nana
 
 							if(item_visible)
 							{
-								// draw item
-								rectangle visible_r{ 0, 0, rect.width, rect.height };
-								rectangle value_min_r{ static_cast<int>(labels_width), y, values_width, item_size };
-								
-								rectangle pane_r;
-								if(::nana::overlap(visible_r, value_min_r, pane_r))
+								rectangle area{ rect.x, rect.y + y, rect.width, item_size };
+								rectangle visible;
+								if(nana::overlap(rect, area, visible))
 								{
-									pane_r.x += rect.x;
-									pane_r.y += rect.y;
-
-									inline_wdg->adjust_position(pane_r, nana::rectangle{ 0, std::min(0, y), pane_r.width, item_size });
+									// draw item
+									inline_wdg->adjust_position(visible, rectangle{ 0, std::min(0, y), visible.width, item_size });
 									API::show_window(*inline_wdg, true);
+
+									item_property->activate(essence_, index_pair{ cat, item });
+									item_property->draw(essence_->graph, area, labels_width, values_width, ibox_width, txtoff, bgcolor, fgcolor);
 								}
 								else
 								{
 									API::show_window(*inline_wdg, false);
 								}
-
-								item_property->activate(essence_, index_pair{ cat, item });
-								rectangle label_r{ rect.x, rect.y + y, labels_width, item_size };
-								value_min_r.x += rect.x;
-								value_min_r.y += rect.y;
-								item_property->draw(essence_->graph, label_r, value_min_r, txtoff, bgcolor, fgcolor);
 							}
 							else
 							{
-								// hide item's pane
 								API::show_window(*inline_wdg, false);
 							}
 
@@ -1141,23 +1081,6 @@ namespace nana
 
 			void trigger::key_press(graph_reference graph, const arg_keyboard& arg)
 			{
-				/*
-				switch(arg.key)
-				{
-				case keyboard::os_pageup:
-				case keyboard::os_pagedown:
-					break;
-				case keyboard::os_home:
-					break;
-				case keyboard::os_end:
-					break;
-
-				default:
-					return;
-				}
-				refresh(graph);
-				API::dev::lazy_refresh();
-				*/
 			}
 			//end class trigger
 
@@ -1167,8 +1090,7 @@ namespace nana
 			{}
 
 			item_proxy::item_proxy(essence_t * ess, const index_pair& pos)
-				: ess_(ess),
-				pos_(pos)
+				: ess_(ess), pos_(pos)
 			{
 				if(ess)
 				{
@@ -1287,25 +1209,54 @@ namespace nana
 
 			item_proxy& item_proxy::value(const std::string& value, bool emit)
 			{
+				_m_property().value(value);
+
 				if(emit)
 					_m_ess()->property_changed(*this);
 
-				_m_property().value(value);
 				_m_ess()->update();
 				return *this;
+			}
+			item_proxy& item_proxy::operator=(const std::string& new_value_string )
+			{
+			    return value( new_value_string, false );
 			}
 			std::string item_proxy::value() const
 			{
 				return _m_property().value();
 			}
 
+			item_proxy& item_proxy::defvalue(const std::string& value)
+			{
+				_m_property().defvalue(value);
+				_m_ess()->update();
+				return *this;
+			}
+			std::string item_proxy::defvalue() const
+			{
+				return _m_property().defvalue();
+			}
+
 			bool item_proxy::enabled()
 			{
 				return _m_property().enabled();
 			}
-			void item_proxy::enabled(bool state)
+			item_proxy& item_proxy::enabled(bool state)
 			{
 				_m_property().enabled(state);
+				return *this;
+			}
+
+            item_proxy& item_proxy::tooltip( const std::string& help_text )
+			{
+				_m_property().tooltip( help_text );
+				return *this;
+			}
+
+			item_proxy& item_proxy::set( const std::vector< std::string >& vs )
+			{
+			    _m_property().set( vs );
+			    return *this;
 			}
 
 			auto item_proxy::_m_property() const -> pgitem&
@@ -1348,7 +1299,7 @@ namespace nana
 
 				p->activate(ess_, index_pair{ pos_, cat_->items.size() });
 				p->typeface_changed(ess_->text_height);
-				p->create(pane_ptr->wd_ptr());
+				p->init(pane_ptr->wd_ptr());
 
 				cat_->items.push_back(std::move(p));
 				cat_->inline_panes.push_back(std::move(pane_ptr));
@@ -1373,6 +1324,12 @@ namespace nana
 				internal_scope_guard lock;
 				return cat_->text;
 			}
+
+			void cat_proxy::expand( bool exp )
+			{
+			    cat_->expand = exp;
+			}
+
 
 			//Behavior of a container
 			item_proxy cat_proxy::begin() const
@@ -1419,6 +1376,18 @@ namespace nana
 			std::size_t cat_proxy::size() const
 			{
 				return cat_->items.size();
+			}
+
+			item_proxy cat_proxy::find(const std::string& prop_name)
+			{
+				size_t pos = 0;
+				for( auto& i : *this )
+				{
+					if( i.label() == prop_name )
+						break;
+					pos++;
+				}
+				return item_proxy(ess_, index_pair(pos_, pos));
 			}
 
 			// Behavior of Iterator
@@ -1539,6 +1508,41 @@ namespace nana
 		_m_ess().lister.enabled(_en = state);
 	}
 
+	unsigned propertygrid::labels_min_width() const
+	{
+		return _m_ess().columns.get_min_width(0);
+	}
+	propertygrid& propertygrid::labels_min_width(unsigned pixels)
+	{
+		auto & ess = _m_ess();
+		ess.columns.set_min_width(0, pixels);
+		ess.update();
+		return *this;
+	}
+
+	unsigned propertygrid::values_min_width() const
+	{
+		return _m_ess().columns.get_min_width(1);
+	}
+	propertygrid& propertygrid::values_min_width(unsigned pixels)
+	{
+		auto & ess = _m_ess();
+		ess.columns.set_min_width(1, pixels);
+		ess.update();
+		return *this;
+	}
+
+	void propertygrid::ibox_show(bool state)
+	{
+		auto & ess = _m_ess();
+		ess.columns.set_min_width(2, state ? IBOX_WIDTH : 0);
+		ess.update();
+	}
+	bool propertygrid::ibox_show() const
+	{
+		return _m_ess().columns.get_min_width(2) == 0 ? false : true;
+	}
+
 	void propertygrid::auto_draw(bool ad)
 	{
 		_m_ess().set_auto_draw(ad);
@@ -1551,55 +1555,16 @@ namespace nana
 		ess.update();
 	}
 
-	propertygrid& propertygrid::labels_width(unsigned pixels)
-	{
-		auto & ess = _m_ess();
-		ess.columns.set_min_width(0, pixels);
-		ess.update();
-		return *this;
-	}
-	propertygrid& propertygrid::values_width(unsigned pixels)
-	{
-		auto & ess = _m_ess();
-		ess.columns.set_min_width(1, pixels);
-		ess.update();
-		return *this;
-	}
-
-	unsigned propertygrid::labels_width() const
-	{
-		return _m_ess().columns.get_min_width(0);
-	}
-	unsigned propertygrid::values_width() const
-	{
-		return _m_ess().columns.get_min_width(1);
-	}
-
-	unsigned propertygrid::labels_auto_width(unsigned max)
-	{
-		auto & ess = _m_ess();
-		unsigned max_w = ess.auto_width(0, max);
-		ess.update();
-		return max_w;
-	}
-	unsigned propertygrid::values_auto_width(unsigned max)
-	{
-		auto & ess = _m_ess();
-		unsigned max_w = ess.auto_width(1, max);
-		ess.update();
-		return max_w;
-	}
-
-	propertygrid::cat_proxy propertygrid::append(std::string s)
+	propertygrid::cat_proxy propertygrid::append(std::string str)
 	{
 		auto & ess = _m_ess();
 
-		auto pos = find(s);
+		auto pos = find(str);
 		if(pos != npos)
 			return cat_proxy{ &ess, pos };
 
 		internal_scope_guard lock;
-		auto new_cat_ptr = ess.lister.create_cat(std::move(s));
+		auto new_cat_ptr = ess.lister.create_cat(std::move(str));
 		ess.update();
 
 		return cat_proxy{ &ess, new_cat_ptr };
@@ -1633,6 +1598,18 @@ namespace nana
 				return pos;
 		}
 		return npos;
+	}
+
+	propertygrid::item_proxy propertygrid::find(const std::string& catName, const std::string& propName ) const
+	{
+		try
+		{
+			return at(find(catName)).find(propName);
+		}
+		catch(std::out_of_range&)
+		{
+			throw std::runtime_error( "Cannot find property " + propName + " in category " + catName );
+		}
 	}
 
 	propertygrid::item_proxy propertygrid::at(const index_pair& idx) const

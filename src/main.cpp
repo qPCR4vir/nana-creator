@@ -6,28 +6,26 @@
 #ifdef NANA_WINDOWS
 #include <windows.h>
 #endif //NANA_WINDOWS
-#include "guimanager.h"
+#include "config.h"
 #include "imagemanager.h"
 #include "filemanager.h"
 #include "inifile.h"
 #include "creator.h"
 
 
-guimanager		g_gui_mgr;	// manage all the gui elements
 imagemanager	g_img_mgr;
 filemanager		g_file_mgr;	// manage absolute and relative path
 inifile			g_inifile;
-std::string		prj_name;
 
 
 #ifdef NANA_WINDOWS
 	#ifdef __RELEASE
 	int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 	#else
-	void main()
+	int main()
 	#endif //__RELEASE
 #else
-	void main()
+	int main()
 #endif //NANA_WINDOWS
 {
 	// init ctrls images
@@ -53,6 +51,8 @@ std::string		prj_name;
 	g_img_mgr.add(CTRL_SLIDER, "icons/slider.png");
 	g_img_mgr.add(CTRL_TABBAR, "icons/tabbar.png");
 	g_img_mgr.add(CTRL_TREEBOX, "icons/treebox.png");
+	g_img_mgr.add(CTRL_NOTEBOOK, "icons/notebook.png");
+	g_img_mgr.add(CTRL_PAGE, "icons/page.png");
 
 
 	creator fm(0, nana::size{ 1200, 700 });

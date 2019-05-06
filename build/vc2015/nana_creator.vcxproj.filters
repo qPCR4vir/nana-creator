@@ -31,14 +31,8 @@
     <Filter Include="Header Files\nana_extra">
       <UniqueIdentifier>{c7c226d8-ce52-45ff-8bab-4ba102d6bd7d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="libs\tokenizer">
-      <UniqueIdentifier>{a3b7cd62-d7b8-4b05-a427-bf9786240304}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\nana_extra\propgrid.cpp">
-      <Filter>Source Files\nana_extra</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\ctrls\button.cpp">
       <Filter>Source Files\ctrls</Filter>
     </ClCompile>
@@ -102,9 +96,6 @@
     <ClCompile Include="..\..\libs\pugixml\pugixml.cpp">
       <Filter>libs\pugixml</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\libs\tokenizer\Tokenizer.cpp">
-      <Filter>libs\tokenizer</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\ctrls\categorize.cpp">
       <Filter>Source Files\ctrls</Filter>
     </ClCompile>
@@ -138,19 +129,10 @@
     <ClCompile Include="..\..\src\ctrls\treebox.cpp">
       <Filter>Source Files\ctrls</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\nana_extra\propgrid_items.cpp">
-      <Filter>Source Files\nana_extra</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\pg_items.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\items_dialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\filemanager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\statusbar.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ctrls\box_model.cpp">
@@ -169,6 +151,24 @@
       <Filter>Source Files\ctrls</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\creator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ctrls\notebook.cpp">
+      <Filter>Source Files\ctrls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ctrls\page.cpp">
+      <Filter>Source Files\ctrls</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\nana_extra\propertygrid.cpp">
+      <Filter>Source Files\nana_extra</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\nana_extra\pgitems.cpp">
+      <Filter>Source Files\nana_extra</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\propertygrid_helper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\pgitems_creator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -212,9 +212,6 @@
     <ClInclude Include="..\..\src\ctrls\toolbar.h">
       <Filter>Header Files\ctrls</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\nana_extra\propgrid.h">
-      <Filter>Header Files\nana_extra</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\assetspanel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -254,9 +251,6 @@
     <ClInclude Include="..\..\libs\pugixml\pugixml.hpp">
       <Filter>libs\pugixml</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\libs\tokenizer\Tokenizer.h">
-      <Filter>libs\tokenizer</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\ctrls\categorize.h">
       <Filter>Header Files\ctrls</Filter>
     </ClInclude>
@@ -290,19 +284,10 @@
     <ClInclude Include="..\..\src\ctrls\treebox.h">
       <Filter>Header Files\ctrls</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\nana_extra\propgrid_items.h">
-      <Filter>Header Files\nana_extra</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\pg_items.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\items_dialog.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\filemanager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\statusbar.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\ctrls\box_model.h">
@@ -321,6 +306,24 @@
       <Filter>Header Files\ctrls</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\creator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ctrls\page.h">
+      <Filter>Header Files\ctrls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\ctrls\notebook.h">
+      <Filter>Header Files\ctrls</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\nana_extra\propertygrid.h">
+      <Filter>Header Files\nana_extra</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\nana_extra\pgitems.h">
+      <Filter>Header Files\nana_extra</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\propertygrid_helper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\pgitems_creator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

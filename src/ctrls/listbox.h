@@ -20,7 +20,9 @@ namespace ctrls
 		: public ctrl
 	{
 	public:
-		listbox(nana::window wd, const std::string& name);
+		listbox(ctrl* parent, const std::string& name);
+
+		static void init_item(properties_collection& item);
 
 		void update() override;
 
@@ -29,6 +31,8 @@ namespace ctrls
 
 	protected:
 		nana::listbox lst;
+
+		nana::drawerbase::listbox::scheme def_scheme;
 	};
 
 }//end namespace ctrls

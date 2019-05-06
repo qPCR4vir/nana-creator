@@ -20,7 +20,7 @@ namespace ctrls
 		: public ctrl
 	{
 	public:
-		spinbox(nana::window wd, const std::string& name);
+		spinbox(ctrl* parent, const std::string& name);
 
 		void update() override;
 
@@ -29,6 +29,10 @@ namespace ctrls
 
 	protected:
 		nana::spinbox spn;
+
+		int _def_begin;
+		int _def_last;
+		int _def_value;
 	};
 
 }//end namespace ctrls

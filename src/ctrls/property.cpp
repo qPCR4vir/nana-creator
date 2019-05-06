@@ -1,7 +1,7 @@
 /*
  *		ctrls::property Implementation
  *
- *      Nana C++ Library - Creator
+ *      part of Nana Creator (https://github.com/besh81/nana-creator)
  *      Author: besh81
  */
 
@@ -44,6 +44,11 @@ namespace ctrls
 		return _prop->value;
 	}
 
+	std::string property_proxy::defvalue() const
+	{
+		return _prop->defvalue;
+	}
+
 	property_proxy& property_proxy::label(const std::string& label)
 	{
 		_prop->label = label;
@@ -74,28 +79,17 @@ namespace ctrls
 		return _prop->type;
 	}
 
-	property_proxy& property_proxy::type_hints(const nana::any hints)
-	{
-		_prop->type_hints = hints;
-		return *this;
-	}
-	nana::any property_proxy::type_hints() const
-	{
-		return _prop->type_hints;
-	}
-
-
 	property_proxy& property_proxy::enabled(const std::string& property, bool value)
 	{
 		_prop->enabled_prop = property;
 		_prop->enabled_value = value;
 		return *this;
 	}
-	std::string property_proxy::enabled()
+	std::string property_proxy::enabled() const
 	{
 		return _prop->enabled_prop;
 	}
-	bool property_proxy::enabled_value()
+	bool property_proxy::enabled_value() const
 	{
 		return _prop->enabled_value;
 	}
@@ -152,28 +146,24 @@ namespace ctrls
 			_prop->value = std::to_string(value);
 		return *this;
 	}
-
 	property_proxy& property_proxy::value(unsigned int value)
 	{
 		if(_prop)
 			_prop->value = std::to_string(value);
 		return *this;
 	}
-
 	property_proxy& property_proxy::value(double value)
 	{
 		if(_prop)
 			_prop->value = std::to_string(value);
 		return *this;
 	}
-
 	property_proxy& property_proxy::value(float value)
 	{
 		if(_prop)
 			_prop->value = std::to_string(value);
 		return *this;
 	}
-
 	property_proxy& property_proxy::value(bool value)
 	{
 		if(_prop)
@@ -185,42 +175,46 @@ namespace ctrls
 	property_proxy& property_proxy::operator=(const std::string& value_)
 	{
 		value(value_);
-		return *this;
+		return def_as_value();
 	}
 	property_proxy& property_proxy::operator=(const char* value_)
 	{
 		value(value_);
-		return *this;
+		return def_as_value();
 	}
 	property_proxy& property_proxy::operator=(int value_)
 	{
 		value(value_);
-		return *this;
+		return def_as_value();
 	}
 	property_proxy& property_proxy::operator=(unsigned int value_)
 	{
 		value(value_);
-		return *this;
+		return def_as_value();
 	}
 	property_proxy& property_proxy::operator=(double value_)
 	{
 		value(value_);
-		return *this;
+		return def_as_value();
 	}
 	property_proxy& property_proxy::operator=(float value_)
 	{
 		value(value_);
-		return *this;
+		return def_as_value();
 	}
 	property_proxy& property_proxy::operator=(bool value_)
 	{
 		value(value_);
-		return *this;
+		return def_as_value();
 	}
 
-	property_t* property_proxy::_m_prop() const
+
+
+	property_proxy& property_proxy::def_as_value()
 	{
-		return _prop;
+		if(_prop)
+			_prop->defvalue = _prop->value;
+		return *this;
 	}
 
 
@@ -283,133 +277,5 @@ namespace ctrls
 		assert(index < _props.size());
 		return property_proxy{ &_props[index] };
 	}
-
-
-	/*property_proxy properties_collection::first() const
-	{
-		return _props.begin();
-	}
-
-	/*property_proxy properties_collection::last() const
-	{
-		return _first_attribute ? property_proxy(_first_attribute->prev_attribute) : property_proxy();
-	}
-
-	property_proxy properties_collection::attribute(const std::string& name) const
-	{
-		for(auto i = _first_attribute; i; i = i->next_attribute)
-			if(i->name.compare(name) == 0)
-				return property_proxy(i);
-
-		return property_proxy();
-	}
-
-	property_proxy properties_collection::append(const std::string& name)
-	{
-		attribute_struct* attr = new attribute_struct();
-
-		impl::append_attribute(attr, &_first_attribute);
-
-		property_proxy a(attr);
-		a.set_name(name);
-		return a;
-	}
-
-	property_proxy properties_collection::prepend(const std::string& name)
-	{
-		attribute_struct* attr = new attribute_struct();
-
-		impl::prepend_attribute(attr, &_first_attribute);
-
-		property_proxy a(attr);
-		a.set_name(name);
-		return a;
-	}
-
-	property_proxy properties_collection::insert_after(const std::string& name, const property_proxy& attr_)
-	{
-		attribute_struct* attr = new attribute_struct();
-
-		impl::insert_attribute_after(attr, attr_.internal_object(), &_first_attribute);
-
-		property_proxy a(attr);
-		a.set_name(name);
-		return a;
-	}
-
-	property_proxy properties_collection::insert_before(const std::string& name, const property_proxy& attr_)
-	{
-		attribute_struct* attr = new attribute_struct();
-
-		impl::insert_attribute_before(attr, attr_.internal_object(), &_first_attribute);
-
-		property_proxy a(attr);
-		a.set_name(name);
-		return a;
-	}
-
-	property_proxy properties_collection::append_copy(const property_proxy& proto)
-	{
-		attribute_struct* attr = new attribute_struct();
-
-		impl::append_attribute(attr, &_first_attribute);
-
-		property_proxy a(attr);
-		a.set_name(proto.name());
-		a.set_value(proto.value());
-		return a;
-	}
-
-	property_proxy properties_collection::prepend_copy(const property_proxy& proto)
-	{
-		attribute_struct* attr = new attribute_struct();
-
-		impl::prepend_attribute(attr, &_first_attribute);
-
-		property_proxy a(attr);
-		a.set_name(proto.name());
-		a.set_value(proto.value());
-		return a;
-	}
-
-	property_proxy properties_collection::insert_copy_after(const property_proxy& proto, const property_proxy& attr_)
-	{
-		attribute_struct* attr = new attribute_struct();
-
-		impl::insert_attribute_after(attr, attr_.internal_object(), &_first_attribute);
-
-		property_proxy a(attr);
-		a.set_name(proto.name());
-		a.set_value(proto.value());
-		return a;
-	}
-
-	property_proxy properties_collection::insert_copy_before(const property_proxy& proto, const property_proxy& attr_)
-	{
-		attribute_struct* attr = new attribute_struct();
-
-		impl::insert_attribute_before(attr, attr_.internal_object(), &_first_attribute);
-
-		property_proxy a(attr);
-		a.set_name(proto.name());
-		a.set_value(proto.value());
-		return a;
-	}
-
-
-	bool properties_collection::remove(const std::string& name)
-	{
-		return remove(attribute(name));
-	}
-
-
-	bool properties_collection::remove(const property_proxy& a)
-	{
-		impl::remove_attribute(a.internal_object(), &_first_attribute);
-		impl::destroy_attribute(a.internal_object());
-
-		return true;
-	}
-	*/
 
 }//end namespace ctrls

@@ -14,10 +14,10 @@ namespace ctrls
 {
 
 	//label
-	label::label(nana::window wd, const std::string& name)
-		: ctrl()
+	label::label(ctrl* parent, const std::string& name)
+		: ctrl(parent)
 	{
-		lbl.create(wd);
+		lbl.create(*parent->nanawdg);
 		ctrl::init(&lbl, CTRL_LABEL, name);
 
 		// common
@@ -25,8 +25,8 @@ namespace ctrls
 		properties.append("format").label("Format").category(CAT_COMMON).type(pg_type::check) = false;
 		// appearance
 		properties.append("transparent").label("Transparent").category(CAT_APPEARANCE).type(pg_type::check) = lbl.transparent();
-		properties.append("halign").label("Horizontal Alignment").category(CAT_APPEARANCE).type(pg_type::halign) = static_cast<int>(nana::align::left);
-		properties.append("valign").label("Vertical Alignment").category(CAT_APPEARANCE).type(pg_type::valign) = static_cast<int>(nana::align_v::top);
+		properties.append("halign").label("Horizontal alignment").category(CAT_APPEARANCE).type(pg_type::halign) = static_cast<int>(nana::align::left);
+		properties.append("valign").label("Vertical alignment").category(CAT_APPEARANCE).type(pg_type::valign) = static_cast<int>(nana::align_v::top);
 		// layout
 		// ...
 	}
@@ -80,10 +80,11 @@ namespace ctrls
 		// init
 		cd->init.push_back(name + ".caption(\"" + properties.property("caption").as_string() + "\");");
 		if(properties.property("format").as_bool())
-			cd->init.push_back(name + ".format(" + properties.property("format").as_string() + ");");
+			cd->init.push_back(name + ".format(true);");
 		if(properties.property("transparent").as_bool())
-			cd->init.push_back(name + ".transparent(" + properties.property("transparent").as_string() + ");");
-		cd->init.push_back(name + ".text_align(static_cast<nana::align>(" + properties.property("halign").as_string() + "), static_cast<nana::align_v>(" + properties.property("valign").as_string() + "));");
+			cd->init.push_back(name + ".transparent(true);");
+		if(properties.property("halign").as_int() != static_cast<int>(nana::align::left) || properties.property("valign").as_int() != static_cast<int>(nana::align_v::top))
+			cd->init.push_back(name + ".text_align(static_cast<nana::align>(" + properties.property("halign").as_string() + "), static_cast<nana::align_v>(" + properties.property("valign").as_string() + "));");
 	}
 
 }//end namespace ctrls

@@ -8,9 +8,9 @@
 #include <iostream>
 #include <fstream>
 #include <streambuf>
-
+#include <cstring>
+#include <algorithm>
 #include "codegenerator.h"
-#include "guimanager.h"
 #include "filemanager.h"
 #include "ctrls/ctrl.h"
 
@@ -24,8 +24,6 @@
 #define DTOR_TAG			"dtor"
 #define DECLARATIONS_TAG	"declarations"
 
-
-extern guimanager	g_gui_mgr;
 
 
 codegenerator::codegenerator()
@@ -235,24 +233,17 @@ void codegenerator::_generate(tree_node<control_obj>* node, const std::string& c
 	if(!node)
 		return;
 
-	auto attr = &node->value->properties;
-
 	code_info_struct ci;
 	ci.create = create;
 	ci.place = place;
 	ci.field = field;
 
 	node->value->generatecode(&_code_data, &ci);
-	
+
 	// children
 	_generate(node->child, ci.create, ci.place, ci.field);
 	// siblings
 	_generate(node->next, create, place, field);
-
-	// children
-	/*_generate(node->child, ci.create, ci.place, ci.place.find(CTRL_GRID) != std::string::npos ? 0 : 1);
-	// siblings
-	_generate(node->next, create, place, place.find(CTRL_GRID) != std::string::npos ? 0 : field + 1);*/
 }
 
 
@@ -389,7 +380,7 @@ bool codegenerator::_write_file()
 
 	_write_line("#endif //" + def_str);
 	_write_line();
-	
+
 	_buffer = _code;
 
 	return true;

@@ -6,19 +6,24 @@
  */
 
 #include <nana/gui/wvl.hpp> // define OS version
-
+#include<iostream>
 #include <stdio.h>  /* defines FILENAME_MAX */
 #if defined(NANA_WINDOWS)
-#include <direct.h>
-#define GetCurrentDir _getcwd
+	#include <direct.h>
+	#define GetCurrentDir _getcwd
+	#define SetCurrentDir _chdir
+    #if defined(__MINGW32__) || defined(__MINGW64__)
+        #include <unistd.h>
+        #include <sys/stat.h>
+    #endif
 #else
-#include <unistd.h>
-#define GetCurrentDir getcwd
+    #include <unistd.h>
+    #include <sys/stat.h>
+    #define GetCurrentDir getcwd
+	#define SetCurrentDir chdir
 #endif
-#include<iostream>
 
 #include "filemanager.h"
-
 
 
 //filemanager
@@ -128,29 +133,6 @@ std::string get_relative_path(const std::string& basedir, const std::string& abs
 }
 
 
-// Given a file path returns the dir path
-// Eg.: if file path is c:/aaa/ccc/file.txt will return c:/aaa/ccc
-std::string get_dir_path(const std::string& filename)
-{
-	// make sure the names are not too long or too short
-	if(filename.empty())
-		return "";
-
-	// find out the last dir
-	int marker = 0;
-	for(unsigned int i = 0; i < filename.size(); i++)
-	{
-		if(filename[i] == '/')
-			marker = i;
-	}
-
-	if(marker == 0)
-		return "";
-
-	return filename.substr(0, marker);
-}
-
-
 //get_working_dir
 std::string get_working_dir()
 {
@@ -161,9 +143,16 @@ std::string get_working_dir()
 }
 
 
+//set_working_dir
+bool set_working_dir(const std::string& path)
+{
+	return SetCurrentDir(path.c_str()) == 0 ? true : false;
+}
+
+
 //file_exists
 bool file_exists(const std::string& name)
 {
-	struct stat buffer;
+    struct stat buffer;
 	return (stat(name.c_str(), &buffer) == 0);
 }

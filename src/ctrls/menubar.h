@@ -21,7 +21,9 @@ namespace ctrls
 		: public ctrl
 	{
 	public:
-		menubar(nana::window wd, const std::string& name);
+		menubar(ctrl* parent, const std::string& name);
+
+		static void init_item(properties_collection& item);
 
 		void update() override;
 
@@ -32,12 +34,10 @@ namespace ctrls
 		nana::menubar mnb;
 
 
-		//utility data
+		// utility data
 		struct menu_data
 		{
-			std::string key;
-			std::string text;
-			bool		separator{ false };
+			properties_collection* item{ 0 };
 
 			nana::menu*	submenu{ 0 };
 			std::string submenu_name;

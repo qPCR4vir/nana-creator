@@ -1,7 +1,7 @@
 /*
  *		ctrls::property Implementation
  *
- *      Nana C++ Library - Creator
+ *      part of Nana Creator (https://github.com/besh81/nana-creator)
  *      Author: besh81
  */
 
@@ -10,7 +10,6 @@
 
 #include <string>
 #include <vector>
-#include <nana/any.hpp>
 
 
 namespace ctrls
@@ -21,7 +20,6 @@ namespace ctrls
 		string_int,
 		string_uint,
 		check,
-		spin,
 		color,
 		color_inherited,
 		halign,
@@ -30,7 +28,6 @@ namespace ctrls
 		seekdir,
 		string_uint_0_100,
 		string_uint_1_100,
-		filename,
 		folder,
 		image,
 		collection_combox,
@@ -40,19 +37,21 @@ namespace ctrls
 		collection_menubar,
 		collection_categorize,
 		collection_collapse,
-		string_weight
+		string_weight,
+		check_style
 	};
+
 
 	struct property_t
 	{
 		std::string		name;
 		std::string		value;
+		std::string		defvalue;
 
 		//
 		std::string		label;
 		std::string		category;
 		pg_type			type;
-		nana::any		type_hints;
 
 		std::string		enabled_prop;
 		bool			enabled_value;
@@ -76,6 +75,8 @@ namespace ctrls
 		property_proxy& value(const std::string& value);
 		std::string value() const;
 
+		std::string defvalue() const;
+
 		property_proxy& label(const std::string& label);
 		std::string label() const;
 		
@@ -85,12 +86,9 @@ namespace ctrls
 		property_proxy& type(const pg_type type);
 		pg_type type() const;
 
-		property_proxy& type_hints(const nana::any type);
-		nana::any type_hints() const;
-
 		property_proxy& enabled(const std::string& property, bool value);
-		std::string enabled();
-		bool enabled_value();
+		std::string enabled() const;
+		bool enabled_value() const;
 
 
 		// Comparison operators (compares wrapped property pointers)
@@ -116,7 +114,7 @@ namespace ctrls
 		property_proxy& value(bool value);
 
 
-		// Set property value (equivalent to set_value without error checking)
+		// Set property value (equivalent to value() but set the defvalue too)
 		property_proxy& operator=(const std::string& value);
 		property_proxy& operator=(const char* value);
 		property_proxy& operator=(int value);
@@ -126,8 +124,8 @@ namespace ctrls
 		property_proxy& operator=(bool value);
 
 
-		// Undocumentated methods for internal use
-		property_t* _m_prop() const;
+		// Set property defvalue
+		property_proxy& def_as_value();
 
 	private:
 		property_t*		_prop{ 0 };

@@ -15,10 +15,10 @@ namespace ctrls
 {
 
 	//group
-	group::group(nana::window wd, const std::string& name)
-		: ctrl()
+	group::group(ctrl* parent, const std::string& name, bool visible)
+		: ctrl(parent)
 	{
-		grp.create(wd);
+		grp.create(*parent->nanawdg, visible);
 		grp.caption(CTRL_GROUP); //BUG: if removed the group caption is not displayed at the beginning !!!
 		boxmodel.bind(&grp);
 
@@ -28,7 +28,7 @@ namespace ctrls
 		properties.append("caption").label("Caption").category(CAT_COMMON).type(pg_type::string) = CTRL_GROUP;
 		properties.append("format").label("Format").category(CAT_COMMON).type(pg_type::check) = false;
 		// appearance
-		properties.append("halign").label("Caption Alignment").category(CAT_APPEARANCE).type(pg_type::halign) = static_cast<int>(nana::align::left);
+		properties.append("halign").label("Caption alignment").category(CAT_APPEARANCE).type(pg_type::halign) = static_cast<int>(nana::align::left);
 		// layout
 		properties.remove("weight");
 		properties.append("layout").label("Layout").category(CAT_LAYOUT).type(pg_type::layout) = static_cast<int>(layout_orientation::horizontal);
@@ -102,7 +102,7 @@ namespace ctrls
 		cd->init.push_back(name + ".caption(\"" + properties.property("caption").as_string() + "\");");
 
 		if(!properties.property("enabled").as_bool())
-			cd->init.push_back(name + ".enabled(" + properties.property("enabled").as_string() + ");");
+			cd->init.push_back(name + ".enabled(false);");
 		generatecode_colors(cd, ci, name);
 		// placement
 		cd->init.push_back(ci->place + "[\"" + ci->field + "\"] << " + name + ";");
@@ -113,54 +113,6 @@ namespace ctrls
 		ci->create = name;
 		ci->place = name;
 		ci->field = DEFAULT_FIELD;
-	}
-
-
-	void group::update_children_info(nana::window child, const std::string& divtext, const std::string& weight)
-	{
-		boxmodel.update_children_info(child, divtext, weight);
-	}
-
-
-	bool group::children()
-	{
-		return boxmodel.children();
-	}
-
-
-	bool group::children_fields()
-	{
-		return boxmodel.children_fields();
-	}
-
-
-	bool group::append(nana::window ctrl)
-	{
-		return boxmodel.append(ctrl);
-	}
-
-
-	bool group::insert(nana::window pos, nana::window ctrl, bool after)
-	{
-		return boxmodel.insert(pos, ctrl, after);
-	}
-
-
-	bool group::remove(nana::window ctrl)
-	{
-		return boxmodel.remove(ctrl);
-	}
-
-
-	bool group::moveup(nana::window ctrl)
-	{
-		return boxmodel.moveup(ctrl);
-	}
-
-
-	bool group::movedown(nana::window ctrl)
-	{
-		return boxmodel.movedown(ctrl);
 	}
 
 }//end namespace ctrls

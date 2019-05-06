@@ -27,6 +27,8 @@ public:
 	bool clear();
 
 	bool select(const std::string& name);
+	void selected(std::function<void(const std::string&)> f);
+	void contex_menu(nana::menu* ctx);
 
 	void emit_events(bool state)
 	{
@@ -49,7 +51,7 @@ private:
 	nana::label		_caption{ *this };
 	nana::treebox	_objects{ *this };
 
-	nana::menu		_ctxmenu;
+	nana::menu*		_ctxmenu;
 
 	std::vector<nana::treebox::item_proxy> _roots;
 

@@ -9,7 +9,8 @@
 #include <iostream>
 #include "ctrls/toolbar.h"
 #include "filemanager.h"
-#include "tokenizer/Tokenizer.h"
+
+#define DEF_IMG_SIZE	16 // get from nana source
 
 
 extern filemanager		g_file_mgr;
@@ -19,18 +20,30 @@ namespace ctrls
 {
 
 	//toolbar
-	toolbar::toolbar(nana::window wd, const std::string& name)
-		: ctrl()
+	toolbar::toolbar(ctrl* parent, const std::string& name)
+		: ctrl(parent)
 	{
-		tlb.create(wd);
+		tlb.create(*parent->nanawdg);
 		ctrl::init(&tlb, CTRL_TOOLBAR, name);
 
 		// common
 		properties.append("buttons").label("Buttons").category(CAT_COMMON).type(pg_type::collection_toolbar) = "";
 		// appearance
-		properties.append("scale").label("Scale").category(CAT_APPEARANCE).type(pg_type::string_uint) = 16; // get from nana source
+		properties.append("scale").label("Scale").category(CAT_APPEARANCE).type(pg_type::string_uint) = DEF_IMG_SIZE;
 		// layout
 		// ...
+	}
+
+
+	void toolbar::init_item(properties_collection& item)
+	{
+		ctrl::init_item(item);
+		item.property("type") = "button";
+		//
+		item.append("text").label("Text").category(CAT_COMMON).type(pg_type::string) = "New Item";
+		item.append("image").label("Image").category(CAT_COMMON).type(pg_type::image) = "";
+		item.append("enable").label("Enable").category(CAT_COMMON).type(pg_type::check) = true;
+		item.append("separator") = false;
 	}
 
 
@@ -42,29 +55,23 @@ namespace ctrls
 
 		// buttons - START
 		tlb.clear();
-		// split buttons into item (delimiter = CITEM_TKN)
-		Tokenizer items_tkn(properties.property("buttons").as_string());
-		items_tkn.setDelimiter(CITEM_TKN);
 
-		std::string item;
-		while((item = items_tkn.next()) != "")
+		std::size_t pos = 0;
+		for(auto& i : items)
 		{
-			if(item == CITEM_TLB_SEPARATOR)
+			if(i.property("separator").as_bool())
 				tlb.separate();
 			else
 			{
-				// split item into properties (delimiter = CITEM_INNER_TKN)
-				Tokenizer item_tkn(item);
-				item_tkn.setDelimiter(CITEM_INNER_TKN);
-
-				auto text = item_tkn.next();
-				auto img = item_tkn.next();
-
-				if(img == "")
-					tlb.append(text);
+				if(i.property("image").as_string().empty())
+					tlb.append(i.property("text").as_string());
 				else
-					tlb.append(text, nana::paint::image(g_file_mgr.to_relative(img)));
+					tlb.append(i.property("text").as_string(), nana::paint::image(g_file_mgr.to_relative(i.property("image").as_string())));
+
+				tlb.enable(pos, i.property("enable").as_bool());
 			}
+
+			++pos;
 		}
 		// buttons - END
 	}
@@ -81,33 +88,30 @@ namespace ctrls
 		// declaration
 		cd->decl.push_back("nana::toolbar " + name + ";");
 		// init
-		cd->init.push_back(name + ".scale(" + properties.property("scale").as_string() + ");");
+		if(properties.property("scale").as_uint() != DEF_IMG_SIZE)
+			cd->init.push_back(name + ".scale(" + properties.property("scale").as_string() + ");");
 
 		// buttons - START
-		// split buttons into item (delimiter = CITEM_TKN)
-		Tokenizer items_tkn(properties.property("buttons").as_string());
-		items_tkn.setDelimiter(CITEM_TKN);
-
-		std::string item;
-		while((item = items_tkn.next()) != "")
+		std::size_t pos = 0;
+		for(auto& i : items)
 		{
-			std::string ln;
-			if(item == CITEM_TLB_SEPARATOR)
-				ln = name + ".separate();";
+			if(i.property("separator").as_bool())
+				cd->init.push_back(name + ".separate();");
 			else
 			{
-				// split item into properties (delimiter = CITEM_INNER_TKN)
-				Tokenizer item_tkn(item);
-				item_tkn.setDelimiter(CITEM_INNER_TKN);
+				auto str = name + ".append(\"" + i.property("text").as_string() + "\"";
 
-				ln = name + ".append(\"" + item_tkn.next() + "\"";
-				auto img = item_tkn.next();
-				if(img == "")
-					ln.append(");");
+				if(i.property("image").as_string().empty())
+					str.append(");");
 				else
-					ln.append(", nana::paint::image(\"" + g_file_mgr.to_relative(img) + "\"));");
+					str.append(", nana::paint::image(\"" + g_file_mgr.to_relative(i.property("image").as_string()) + "\"));");
+				cd->init.push_back(str);
+
+				if(!i.property("enable").as_bool())
+					cd->init.push_back(name + ".enable(" + std::to_string(pos) + ", false);");
 			}
-			cd->init.push_back(ln);
+
+			++pos;
 		}
 		// buttons - END
 	}

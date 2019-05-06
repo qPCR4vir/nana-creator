@@ -11,7 +11,6 @@
 #include <nana/gui/widgets/panel.hpp>
 #include "ctrls/ctrl.h"
 #include "ctrls/box_model.h"
-#include "codegenerator_data.h"
 
 
 namespace ctrls
@@ -21,29 +20,28 @@ namespace ctrls
 		: public ctrl
 	{
 	public:
-		panel(nana::window wd, const std::string& name, bool mainclass = false, bool visible = true);
+		panel(ctrl* parent, const std::string& name, bool visible = true);
+
+		// relationship management
+		bool append(ctrl* child) override { return boxmodel.append(child); }
+		bool insert(ctrl* child, ctrl* pos, bool after) override { return boxmodel.insert(child, pos, after); }
+		bool remove(ctrl* child) override { return boxmodel.remove(child); }
+		//
+		bool moveup(ctrl* child) override { return boxmodel.moveup(child); }
+		bool movedown(ctrl* child) override { return boxmodel.movedown(child); }
+		//
+		bool children() override { return boxmodel.children(); }
+		bool children_fields() override { return boxmodel.children_fields(); }
+
 
 		void update() override;
 
 		void generatecode(code_data_struct* cd, code_info_struct* ci) override;
 
-		void update_children_info(nana::window child, const std::string& divtext, const std::string& weight);
-
-		bool children();
-		bool children_fields();
-		bool append(nana::window ctrl);
-		bool insert(nana::window pos, nana::window ctrl, bool after = true);
-		bool remove(nana::window ctrl);
-
-		bool moveup(nana::window ctrl);
-		bool movedown(nana::window ctrl);
-
 
 	protected:
 		nana::panel<true>	pnl;
 		box_model			boxmodel;
-	
-		bool				_mainclass{ false };
 	};
 
 }//end namespace ctrls

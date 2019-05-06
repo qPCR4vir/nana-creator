@@ -13,7 +13,7 @@
 #include "config.h"
 #include "tree.h"
 #include "codegenerator_data.h"
-#include "ctrls/ctrl.h"
+#include "guimanager.h" //XXX serve per definizione control_obj -> risolvere
 
 
 

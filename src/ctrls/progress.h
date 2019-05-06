@@ -20,7 +20,7 @@ namespace ctrls
 		: public ctrl
 	{
 	public:
-		progress(nana::window wd, const std::string& name);
+		progress(ctrl* parent, const std::string& name);
 
 		void update() override;
 
@@ -29,6 +29,9 @@ namespace ctrls
 
 	protected:
 		nana::progress prg;
+
+		unsigned int _def_amount;
+		unsigned int _def_value;
 	};
 
 }//end namespace ctrls

@@ -8,19 +8,20 @@
 #include "config.h"
 #include <iostream>
 #include "ctrls/menubar.h"
-#include "tokenizer/Tokenizer.h"
+#include "filemanager.h"
+
+
+extern filemanager		g_file_mgr;
 
 
 namespace ctrls
 {
-	
-
 
 	//menubar
-	menubar::menubar(nana::window wd, const std::string& name)
-		: ctrl()
+	menubar::menubar(ctrl* parent, const std::string& name)
+		: ctrl(parent)
 	{
-		mnb.create(wd);
+		mnb.create(*parent->nanawdg);
 		ctrl::init(&mnb, CTRL_MENUBAR, name);
 
 		// common
@@ -32,6 +33,20 @@ namespace ctrls
 	}
 
 
+	void menubar::init_item(properties_collection& item)
+	{
+		ctrl::init_item(item);
+		item.property("type") = "menu";
+		//
+		item.append("text").label("Text").category(CAT_COMMON).type(pg_type::string) = "New Menu";
+		item.append("image").label("Image").category(CAT_COMMON).type(pg_type::image) = "";
+		item.append("enabled").label("Enabled").category(CAT_COMMON).type(pg_type::check) = true;
+		item.append("check_style").label("Check style").category(CAT_COMMON).type(pg_type::check_style) = static_cast<int>(nana::menu::checks::none);
+		item.append("checked").label("Checked").category(CAT_COMMON).type(pg_type::check) = false;
+		item.append("separator") = false;
+	}
+
+
 	void menubar::update()
 	{
 		ctrl::update();
@@ -40,29 +55,38 @@ namespace ctrls
 		mnb.clear();
 		create_menu_tree();
 
-		// Generate menus code
+		// Create menus
 		//--------------------------------
 		auto pmnb = &mnb;
 		menu_tree.for_each([&pmnb](tree_node<menu_data>* node) -> bool
 		{
-			if(node->level() == 0)
-				return true; //this is the root node
-
 			auto* pval = &node->value;
 
-			if(node->level() == 1)
+			if(node->level() == 0)
 			{
 				//this is a menubar item
 				if(node->child)
-					pval->submenu = &(pmnb->push_back(pval->text));
+					pval->submenu = &(pmnb->push_back(pval->item->property("text").as_string()));
 				else
-					pmnb->push_back(pval->text);
+					pmnb->push_back(pval->item->property("text").as_string());
 			}
 			else
 			{
 				//this is a menu item
 				auto* pval_parent = &node->owner->value;
-				pval_parent->submenu->append(pval->text);
+				if(pval->item->property("separator").as_bool())
+					pval_parent->submenu->append_splitter();
+				else
+				{
+					pval_parent->submenu->append(pval->item->property("text").as_string());
+
+					if(!pval->item->property("image").as_string().empty())
+						pval_parent->submenu->image(pval_parent->submenu->size()-1, nana::paint::image(g_file_mgr.to_relative(pval->item->property("image").as_string())));
+
+					pval_parent->submenu->enabled(pval_parent->submenu->size() - 1, pval->item->property("enabled").as_bool() ? true : false);
+					pval_parent->submenu->check_style(pval_parent->submenu->size() - 1, static_cast<nana::menu::checks>(pval->item->property("check_style").as_int()));
+					pval_parent->submenu->checked(pval_parent->submenu->size() - 1, pval->item->property("checked").as_bool() ? true : false);
+				}
 
 				if(node->child)
 					pval->submenu = pval_parent->submenu->create_sub_menu(pval_parent->submenu->size()-1);
@@ -93,28 +117,40 @@ namespace ctrls
 		//--------------------------------
 		menu_tree.for_each([&cd, &name](tree_node<menu_data>* node) -> bool
 		{
-			if(node->level() == 0)
-				return true; //this is the root node
-
 			auto* pval = &node->value;
 
-			if(node->level() == 1)
+			if(node->level() == 0)
 			{
 				//this is a menubar item
 				if(node->child)
 				{
 					//TODO: il nome del menu non dovrebbe essere presente tra i vari controlli
 					pval->submenu_name = name + "_" + std::to_string(node->pos());
-					cd->init.push_back("auto* " + pval->submenu_name + " = &" + name + ".push_back(\"" + pval->text + "\");");
+					cd->init.push_back("auto* " + pval->submenu_name + " = &" + name + ".push_back(\"" + pval->item->property("text").as_string() + "\");");
 				}
 				else
-					cd->init.push_back(name + ".push_back(\"" + pval->text + "\");");
+					cd->init.push_back(name + ".push_back(\"" + pval->item->property("text").as_string() + "\");");
 			}
 			else
 			{
 				//this is a menu item
 				auto* pval_parent = &node->owner->value;
-				cd->init.push_back(pval_parent->submenu_name + "->append(\"" + pval->text + "\");");
+				if(pval->item->property("separator").as_bool())
+					cd->init.push_back(pval_parent->submenu_name + "->append_splitter();");
+				else
+				{
+					cd->init.push_back(pval_parent->submenu_name + "->append(\"" + pval->item->property("text").as_string() + "\");");
+
+					if(!pval->item->property("image").as_string().empty())
+						cd->init.push_back(pval_parent->submenu_name + "->image(" + std::to_string(node->pos()) + ", nana::paint::image(\"" + g_file_mgr.to_relative(pval->item->property("image").as_string()) + "\"));");
+					
+					if(!pval->item->property("enabled").as_bool())
+						cd->init.push_back(pval_parent->submenu_name + "->enabled(" + std::to_string(node->pos()) + ", false);");
+					if(pval->item->property("check_style").as_int() != static_cast<int>(nana::menu::checks::none))
+						cd->init.push_back(pval_parent->submenu_name + "->check_style(" + std::to_string(node->pos()) + ", static_cast<nana::menu::checks>(" + pval->item->property("check_style").as_string() + "));");
+					if(pval->item->property("checked").as_bool())
+						cd->init.push_back(pval_parent->submenu_name + "->checked(" + std::to_string(node->pos()) + ", true);");
+				}
 
 				if(node->child)
 				{
@@ -131,37 +167,31 @@ namespace ctrls
 	void menubar::create_menu_tree()
 	{
 		menu_tree.clear();
-
-		menu_data root;
-		root.key = CITEM_EMPTY;
-		root.text = "root";
-		menu_tree.append(0, root);
-
-		// split columns into item (delimiter = CITEM_TKN)
-		Tokenizer items_tkn(properties.property("menus").as_string());
-		items_tkn.setDelimiter(CITEM_TKN);
-
-		std::string item;
-		while((item = items_tkn.next()) != "")
+		
+		// populate the menu_tree
+		for(auto& i : items)
 		{
-			// split item into properties (delimiter = CITEM_INNER_TKN)
-			Tokenizer item_tkn(item);
-			item_tkn.setDelimiter(CITEM_INNER_TKN);
-
 			menu_data md;
-			md.key = item_tkn.next();
-			auto owner = item_tkn.next();
-			md.text = item_tkn.next();
+			md.item = &i;
 
-			menu_tree.for_each([&owner, &md](tree_node<menu_data>* node) -> bool
+			if(i.property("owner").as_string().empty())
 			{
-				if(owner == node->value.key)
+				menu_tree.append(md);
+			}
+			else
+			{
+				auto owner = i.property("owner").as_string();
+
+				menu_tree.for_each([&owner, &md](tree_node<menu_data>* node) -> bool
 				{
-					node->append(md);
-					return false;
-				}
-				return true;
-			});
+					if(owner == node->value.item->property("key").as_string())
+					{
+						node->append(md);
+						return false;
+					}
+					return true;
+				});
+			}
 		}
 	}
 
