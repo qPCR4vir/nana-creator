@@ -12,9 +12,10 @@
 
 #include <nana/gui/wvl.hpp>
 
-#include <config.h>
+#include "../config.h"
+#include "../codegenerator_data.h"
+
 #include "property.h"
-#include <codegenerator_data.h>
 
 
 namespace ctrls
